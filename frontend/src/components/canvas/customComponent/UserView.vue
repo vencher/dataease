@@ -1062,7 +1062,26 @@ export default {
       const customAttr = JSON.parse(this.chart.customAttr)
       const currentNode = this.findEntityByCode(aCode || customAttr.areaCode, this.places)
       if (currentNode && currentNode.children && currentNode.children.length > 0) {
-        const nextNode = currentNode.children.find(item => item.name === name)
+        let nextNode = currentNode.children.find(item => item.name === name)
+        
+        // MODIFY BY vencher 20221213 兼容地图省市改名称后下钻
+        if (!nextNode && this.chart.senior) {
+          const senior = JSON.parse(this.chart.senior)
+          if (senior.mapMapping && senior.mapMapping[currentNode.code]) {
+            const mapping = senior.mapMapping[currentNode.code]
+            const orgName = Object.keys(mapping).find(orgname => mapping[orgname] === name)
+            nextNode = currentNode.children.find(item => item.name === orgName)
+          }
+        }
+        if (!nextNode) {
+          this.$message({
+            type: 'warn',
+            message: `未找到地图下级[${currentNode.name}]`,
+            showClose: true
+          })
+        }
+        // END MODIFY 20221213
+        
         this.currentAcreaNode = nextNode
         const current = this.$refs[this.element.propValue.id]
         if (this.chart.isPlugin) {
